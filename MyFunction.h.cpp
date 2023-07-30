@@ -1,28 +1,6 @@
-#pragma once
-#include <Windows.h>
-#include <cstdint>
-#include <string>
-//ウィンドウプロシージャー
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-{
-	//メッセージに応じてゲーム固有の処理を行う
-	switch (msg)
-	{
-		//ウィンドウが破壊された
-	case WM_DESTROY:
+#include "MyFunction.h"
 
-		//OSに対して、アプリの終了を伝える
-		PostQuitMessage(0);
-
-		return 0;
-	}
-
-	std::wstring ConvertString(const std::string & str);
-
-	std::string ConvertString(const std::wstring & str);
-
-
-	std::wstring ConvertString(const std::string& str)
+std::wstring ConvertString(const std::string& str)
 {
 	if (str.empty())
 	{
@@ -37,11 +15,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	std::wstring result(sizeNeeded, 0);
 	MultiByteToWideChar(CP_UTF8, 0, reinterpret_cast<const char*>(&str[0]), static_cast<int>(str.size()), &result[0], sizeNeeded);
 	return result;
+
+
 }
-
-
-
-
 
 std::string ConvertString(const std::wstring& str) {
 	if (str.empty())
@@ -58,5 +34,32 @@ std::string ConvertString(const std::wstring& str) {
 	WideCharToMultiByte(CP_UTF8, 0, str.data(), static_cast<int>(str.size()), result.data(), sizeNeeded, NULL, NULL);
 	return result;
 }
+Vector4 ColorAdapter(unsigned int color) {
+	Vector4 ResultColor = {
 
+	   ((color >> 24) & 0xFF) / 255.0f, // 赤
 
+	   ((color >> 16) & 0xFF) / 255.0f, // 緑
+
+	   ((color >> 8) & 0xFF) / 255.0f,  // 青
+
+	   ((color) & 0xFF) / 255.0f //透明度
+
+	};
+
+	return ResultColor;
+
+}
+
+LRESULT CALLBACK  WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+	switch (msg) {
+		//ウィンドウが破棄された
+	case WM_DESTROY:
+		//OSに対してアプリの終了を伝える
+		PostQuitMessage(0);
+		return 0;
+	}
+
+	return DefWindowProc(hwnd, msg, wparam, lparam);
+
+}
