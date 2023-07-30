@@ -102,9 +102,7 @@ public:
 
 
 private:
-	//DirectXSetupでしか使わないから
-	//provateにしても良いと思った。
-	//あとアロー演算子使ったとき邪魔
+	
 
 	////CompileShader関数
 	IDxcBlob* CompileShader(

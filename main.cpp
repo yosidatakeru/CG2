@@ -132,21 +132,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector4 Color[TRIANGLE_AMOUNT_MAX] = {
 		{ ColorAdapter(RED)},//RED
 		{ 0.0f,1.0f,0.0f,1.0f },//GREEN
-		{ ColorAdapter(BLUE) },//BLUE
-		{ ColorAdapter(WHITE)  },
-		{ ColorAdapter(PURPLE) },
+		{ ColorAdapter(RED) },//BLUE
+		{ ColorAdapter(RED)  },
+		{ ColorAdapter(RED) },
 
 		{ 0.0f,0.0f,1.0f,1.0f },
 		{ 1.0f,0.0f,0.0f,1.0f },
-		{ ColorAdapter(BLACK) },
+		{ ColorAdapter(RED) },
 		{ 0.0f,0.0f,1.0f,1.0f },
 		{ 1.0f,0.0f,0.0f,1.0f },
 
 		{0.6f,0.5f,0.0f,1.0f },
-		{ColorAdapter(BLUE) },
+		{ColorAdapter(RED) },
 		{0.2f,0.5f,0.0f,1.0f },
 		{0.6f,0.5f,0.0f,1.0f },
-		{ColorAdapter(WHITE)  },
+		{ColorAdapter(RED)  },
 
 	};
 
