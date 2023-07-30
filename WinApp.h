@@ -1,18 +1,26 @@
 #pragma once
+
 #include <Windows.h>
-#include "MyFunction.h"
-//#include<string>
-#include<format>
+#include <cstdint>
 
-class WinApp
+#include "imGui/imgui.h"
+#include "imGui/imgui_impl_dx12.h"
+#include "imGui/imgui_impl_win32.h"
+
+
+//extern...グローバル変数を共有する
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+class WinApp 
 {
-
 public:
 
-
 	//コンストラクタ
-	WinApp(const wchar_t* title, const int32_t WindowSizeWidth, const int32_t WindowSizeHeight);
+	WinApp();
 
+
+	//Window Procedure
+	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 
 
 	//ウィンドウクラスを登録
@@ -22,7 +30,7 @@ public:
 	void DisplayWindow();
 
 
-	void Initialize();
+	void Initialize(const wchar_t* title, const int32_t WindowSizeWidth, const int32_t WindowSizeHeight);
 
 
 
@@ -46,7 +54,7 @@ public:
 		return hwnd_;
 	}
 
-public:
+private:
 
 	////ウィンドウクラスを登録する
 	const wchar_t* title_;

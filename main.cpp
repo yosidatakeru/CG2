@@ -1,36 +1,33 @@
-#include "MYFunction.h"
 #include "WinApp.h"
 #include "DirectXCommon.h"
 #include "Triangle.h"
-//includeなどは全部Function.hに入っているよ！
+#include "ImGuiManager.h"
 
-
-
+#include "Vector4.h"
+#include "Matrix4x4.h"
+#include "ColorConvert.h"
+#include "Transform.h"
+#include "Matrix4x4Calculation.h"
 
 
 //Winodwsアプリでもエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
-	// 色指定サンプル
-	const unsigned int WHITE = 0xFFFFFFFF; // 白
-	const unsigned int BLACK = 0x000000FF; // 黒
-	const unsigned int RED = 0xFF0000FF;   // 赤
-	const unsigned int GREEN = 0x00FF0FF;  // 緑
-	const unsigned int BLUE = 0x0000FFFF; // 青
 
-	const unsigned int  YELLOW = 0xFFFF00FF; //黄色
-	const unsigned int PURPLE = 0xFF00FFFF; //紫
-
-
+	//ウィンドウのサイズを決める
 	const int32_t WINDOW_SIZE_WIDTH = 1280;
 	const int32_t WINDOW_SIZE_HEIGHT = 720;
 
 
 	//コンストラクタ
-	WinApp* winSetup = new WinApp(L"DirectX", WINDOW_SIZE_WIDTH, WINDOW_SIZE_HEIGHT);
-	DirectXCommon* directXSetup = new DirectXCommon();
+	//
+	//KAMATA ENGINEみたいにGameSceneでまとめたい
+	//GameScene* gamescene = new GameScene();
 
+	WinApp* winSetup = new WinApp();
+	DirectXCommon* directXSetup = new DirectXCommon();
+	ImGuiManager* imGuiManager = new ImGuiManager();
 
 
 	//三角形の情報
@@ -40,23 +37,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	//初期化
-	winSetup->Initialize();
+	winSetup->Initialize(L"DirectX", WINDOW_SIZE_WIDTH, WINDOW_SIZE_HEIGHT);
 	directXSetup->Initialize(winSetup->GetClientWidth(), winSetup->GetClientHeight(), winSetup->GetHwnd());
+	imGuiManager->Initialize(winSetup, directXSetup);
 
-	Triangle* triangle[TRIANGLE_AMOUNT_MAX];
+
 	////三角形について
+	Triangle* triangle[TRIANGLE_AMOUNT_MAX];
 	for (int i = 0; i < TRIANGLE_AMOUNT_MAX; i++) {
 		triangle[i] = new Triangle();
 		triangle[i]->Initialize(directXSetup);
 
-		//triangle[i]->GenarateVertexResource();
 	}
 
 
 
 
 
-	Vector4 TriangleCoodinateLeft[TRIANGLE_AMOUNT_MAX] = {
+	Vector4 triangleCoodinateLeft[TRIANGLE_AMOUNT_MAX] = {
 		//left
 		//一段目
 		{-1.0f,0.5f,0.0f,1.0f },
@@ -79,7 +77,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	};
 
-	Vector4 TriangleCoodinateTop[TRIANGLE_AMOUNT_MAX] = {
+	Vector4 triangleCoodinateTop[TRIANGLE_AMOUNT_MAX] = {
 
 		//up
 		{-0.8f,1.0f,0.0f,1.0f },
@@ -102,7 +100,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.8f,0.0f,0.0f,1.0f },
 	};
 
-	Vector4 TriangleCoodinateRight[TRIANGLE_AMOUNT_MAX] = {
+	Vector4 triangleCoodinateRight[TRIANGLE_AMOUNT_MAX] = {
 		//right
 		{-0.6f,0.5f,0.0f,1.0f },
 		{-0.2f,0.5f,0.0f,1.0f },
@@ -124,31 +122,59 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	};
 
+	Vector3 scale = { 1.0f,1.0f,1.0f };
+	Vector3 rotate = { 0.0f,0.0f,0.0f };
+	Vector3 translate = { 0.0f,0.0f,0.0f };
 
+	Transform transform2 = { scale,rotate,translate };
 
+	Transform transform[TRIANGLE_AMOUNT_MAX]{
+		{scale,rotate,translate },
+		{scale,rotate,translate },
+		{scale,rotate,translate },
+		{scale,rotate,translate },
+		{scale,rotate,translate },
+
+		{scale,rotate,translate },
+		{scale,rotate,translate },
+		{scale,rotate,translate },
+		{scale,rotate,translate },
+		{scale,rotate,translate },
+
+		{scale,rotate,translate },
+		{scale,rotate,translate },
+		{scale,rotate,translate },
+		{scale,rotate,translate },
+		{scale,rotate,translate },
+	};
 
 
 	//頂いた関数で色を決めていく
-	Vector4 Color[TRIANGLE_AMOUNT_MAX] = {
+	Vector4 color[TRIANGLE_AMOUNT_MAX] = {
 		{ ColorAdapter(RED)},//RED
 		{ 0.0f,1.0f,0.0f,1.0f },//GREEN
-		{ ColorAdapter(RED) },//BLUE
-		{ ColorAdapter(RED)  },
-		{ ColorAdapter(RED) },
+		{ ColorAdapter(BLUE) },//BLUE
+		{ ColorAdapter(WHITE)  },
+		{ ColorAdapter(PURPLE) },
 
 		{ 0.0f,0.0f,1.0f,1.0f },
 		{ 1.0f,0.0f,0.0f,1.0f },
-		{ ColorAdapter(RED) },
+		{ ColorAdapter(BLACK) },
 		{ 0.0f,0.0f,1.0f,1.0f },
 		{ 1.0f,0.0f,0.0f,1.0f },
 
 		{0.6f,0.5f,0.0f,1.0f },
-		{ColorAdapter(RED) },
+		{ColorAdapter(BLUE) },
 		{0.2f,0.5f,0.0f,1.0f },
 		{0.6f,0.5f,0.0f,1.0f },
-		{ColorAdapter(RED)  },
+		{ColorAdapter(WHITE)  },
 
 	};
+
+
+
+	Transform cameraTransform = { {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,-5.0f} };
+
 
 
 	MSG msg{};
@@ -166,32 +192,71 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		else {
 			//ゲームの処理
 
+			//フレームの開始
+			directXSetup->BeginFrame();
+			imGuiManager->BeginFrame();
+
+#pragma region 更新処理
+
+			imGuiManager->UpDate();
+			//
+			for (int i = 0; i < TRIANGLE_AMOUNT_MAX; i++) {
+				//y軸回転
+				//transform[i].rotate.y += 0.03f;
+			}
+
+
+			//カメラ行列
+			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+
+			//遠視投影行列
+			Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WINDOW_SIZE_WIDTH) / float(WINDOW_SIZE_HEIGHT), 0.1f, 100.0f);
+
+
+			imGuiManager->PreDraw();
+#pragma endregion
+
+
+#pragma region 描画処理
+
+			imGuiManager->Draw(directXSetup);
+
+			for (int i = 0; i < TRIANGLE_AMOUNT_MAX; i++) {
+				//描画処理
+				triangle[i]->Draw(
+					triangleCoodinateLeft[i],
+					triangleCoodinateTop[i],
+					triangleCoodinateRight[i],
+					transform[i],
+					viewMatrix,
+					projectionMatrix,
+					color[i]
+				);
+			}
+
+
+			imGuiManager->EndFrame(directXSetup);
+
+#pragma endregion
+
+
+
+			//フレームの終わり
+			directXSetup->EndFrame();
+
 
 
 
 		}
-		directXSetup->BeginFlame();
 
-
-		for (int i = 0; i < TRIANGLE_AMOUNT_MAX; i++) {
-			//描画処理
-			triangle[i]->Draw(
-				TriangleCoodinateLeft[i],
-				TriangleCoodinateTop[i],
-				TriangleCoodinateRight[i],
-				Color[i]
-			);
-		}
-
-		directXSetup->EndFlame();
 	}
+
 
 	for (int i = 0; i < TRIANGLE_AMOUNT_MAX; i++) {
 		//描画処理
 		triangle[i]->Release();
-
 	}
-
 
 
 
@@ -202,11 +267,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//解放処理
 	directXSetup->Release();
 	winSetup->Close();
+	imGuiManager->Release();
 
 	delete directXSetup;
 	delete winSetup;
-
-
+	delete imGuiManager;
 
 
 	return 0;

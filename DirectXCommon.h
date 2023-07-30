@@ -1,5 +1,7 @@
-#pragma once
-#pragma once
+#include "LogConvert.h"
+#include "WinApp.h"
+#include "Vector4.h"
+
 
 #include <cassert>
 #include <d3d12.h>
@@ -13,21 +15,41 @@
 
 
 
-#include <cstdint>
-#include <string>
-#include <dxcapi.h>
-#include <format>
 
 
-#include"MyFunction.h"
-
-
-class DirectXCommon {
+//メンバ変数関数いつか整理したい・・・
+//ごちゃごちゃしてる
+class DirectXCommon{
 public:
 
 	DirectXCommon();
 
 	//まとめたのが下の「Initialize」
+	//他の所では使わないからprivateにしても良さそう
+	//アロー演算子を使ったとき邪魔になるから
+private:
+
+	
+
+	//CompilerShader関数
+	IDxcBlob* CompileShader(
+		//CompilerするShaderファイルへのパス
+		const std::wstring& filePath,
+		//Compilerに使用するProfile
+		const wchar_t* profile,
+		//初期化で生成したものを３つ
+		IDxcUtils* dxcUtils,
+		IDxcCompiler3* dxcCompiler,
+		IDxcIncludeHandler* includeHandler);
+
+	//DescriptorHeapの作成関数
+	ID3D12DescriptorHeap* GenarateDescriptorHeap(
+		ID3D12Device* device,
+		D3D12_DESCRIPTOR_HEAP_TYPE heapType,
+		UINT numDescriptors, bool shaderVisible);
+
+
+
 #pragma region 初期化について
 	//初期化へ
 
@@ -50,6 +72,7 @@ public:
 
 	void PullResourcesFromSwapChain();
 
+	//void DecideDescriptorPoisition();
 	void SetRTV();
 
 	void InitializeDXC();
@@ -62,13 +85,22 @@ public:
 
 #pragma endregion
 
+
+public:
+
 	void Initialize(int32_t windowsizeWidth, int32_t windowsizeHeight, HWND hwnd_);
+
+
+
+
 
 #pragma region whileの中身
 	//whileの中身
-	void BeginFlame();
+	void BeginFrame();
 
-	void EndFlame();
+	//void DrawTriangle(Vector4 top, Vector4 left, Vector4 right,TriangleVertex vertexBuffer);
+
+	void EndFrame();
 
 #pragma endregion
 
@@ -84,7 +116,10 @@ public:
 #pragma endregion
 
 
-#pragma region アクセッサ
+
+
+
+#pragma region 他のクラスでも使いたいのでGetter
 
 	HRESULT GetHr_() {
 		return hr_;
@@ -98,21 +133,22 @@ public:
 		return commandList_;
 	}
 
+
+
+	ID3D12DescriptorHeap* GetSrvDescriptorHeap() {
+		return  srvDescriptorHeap_;
+	}
+
+	D3D12_RENDER_TARGET_VIEW_DESC GetRtvDesc() {
+		return rtvDesc_;
+	}
+
+	DXGI_SWAP_CHAIN_DESC1 GetswapChainDesc() {
+		return swapChainDesc_;
+	}
+
+
 #pragma endregion
-
-
-private:
-	
-
-	////CompileShader関数
-	IDxcBlob* CompileShader(
-		const std::wstring& filePath,
-		const wchar_t* profile,
-		IDxcUtils* dxcUtils,
-		IDxcCompiler3* dxcCompiler,
-		IDxcIncludeHandler* includeHandler);
-
-
 
 private:
 	int32_t kClientWidth_;
@@ -180,14 +216,17 @@ private:
 	UINT backBufferIndex_;
 
 
-
-
+	//ID3D12DescriptorHeap* srvDescriptorHeap_ = nullptr;
+	//D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
+	//DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};
 
 	IDXGISwapChain4* swapChain_ = nullptr;
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc_{};
 
 	ID3D12Resource* swapChainResources_[2] = { nullptr };
 
 	ID3D12DescriptorHeap* rtvDescriptorHeap_ = nullptr;
+	ID3D12DescriptorHeap* srvDescriptorHeap_ = nullptr;
 
 	D3D12_DESCRIPTOR_HEAP_DESC rtvDescriptorHeapDesc_{};
 
@@ -196,6 +235,9 @@ private:
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc_{};
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvStartHandle_;
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandles_[2] = {};
+
+
+
 
 	typedef struct D3D12_CPU_DESCRIPTOR_HANDLE {
 		SIZE_T ptr_;
@@ -215,10 +257,14 @@ private:
 #pragma region DXCの初期化について
 	IDxcUtils* dxcUtils_ = nullptr;
 	IDxcCompiler3* dxcCompiler_ = nullptr;
-	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature_{};
+
 	IDxcIncludeHandler* includeHandler_ = nullptr;
 
 #pragma endregion
+
+	//PSO
+	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature_{};
+
 
 	D3D12_VIEWPORT viewport_{};
 	D3D12_RECT scissorRect_{};

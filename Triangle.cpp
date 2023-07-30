@@ -1,19 +1,26 @@
+#include "Transform.h"
+#include "WorldViewMatrix.h"
 #include "Triangle.h"
-Triangle::Triangle() {
+
+Triangle::Triangle() 
+{
 
 }
 
 
 
-void Triangle::Initialize(DirectXCommon* directXCommon) {
-	directXCommon_ = directXCommon;
+void Triangle::Initialize(DirectXCommon* directXSetup) 
+{
+	directXSetup_ = directXSetup;
 
 	//ここでBufferResourceを作る
-	vertexResouce_ = CreateBufferResource(sizeof(Vector4) * 3);
-	materialResource = CreateBufferResource(sizeof(Vector4) * 3);
+	vertexResouce_ = CreateBufferResource(directXSetup->GetDevice(), sizeof(Vector4) * 3);
+	materialResource = CreateBufferResource(directXSetup->GetDevice(), sizeof(Vector4) * 3);
+	//WVP用のリソースを作る。Matrix4x4　1つ分のサイズを用意する
+	wvpResource_ = CreateBufferResource(directXSetup_->GetDevice(), sizeof(Matrix4x4));
 
+	//頂点バッファビューを作成する
 	GenerateVertexBufferView();
-	//GenarateVertexResource();
 
 
 
@@ -21,8 +28,7 @@ void Triangle::Initialize(DirectXCommon* directXCommon) {
 
 
 //Resource作成の関数化
-//deviceいるかな？と思ったので消します！
-ID3D12Resource* Triangle::CreateBufferResource(size_t sizeInBytes) {
+ID3D12Resource* Triangle::CreateBufferResource(ID3D12Device* device, size_t sizeInBytes) {
 	//void返り値も忘れずに
 	ID3D12Resource* resource = nullptr;
 
@@ -48,7 +54,7 @@ ID3D12Resource* Triangle::CreateBufferResource(size_t sizeInBytes) {
 	//実際に頂点リソースを作る
 	//ID3D12Resource* vertexResource_ = nullptr;
 	//hrは調査用
-	hr_ = directXCommon_->GetDevice()->CreateCommittedResource(
+	hr_ = device->CreateCommittedResource(
 		&uploadHeapProperties_,
 		D3D12_HEAP_FLAG_NONE,
 		&vertexResourceDesc_,
@@ -59,7 +65,10 @@ ID3D12Resource* Triangle::CreateBufferResource(size_t sizeInBytes) {
 	return resource;
 }
 
+void Triangle::GenerateTransformationMatrixResource() {
 
+
+}
 
 //頂点バッファビューを作成する
 void Triangle::GenerateVertexBufferView() {
@@ -75,7 +84,7 @@ void Triangle::GenerateVertexBufferView() {
 }
 
 
-//三角形
+//三角形の頂点リソースを生成
 void Triangle::GenarateVertexResource() {
 
 
@@ -105,7 +114,7 @@ void Triangle::GenarateVertexResource() {
 	//実際に頂点リソースを作る
 	//ID3D12Resource* vertexResource_ = nullptr;
 	//hrは調査用
-	hr_ = directXCommon_->GetDevice()->CreateCommittedResource(
+	hr_ = directXSetup_->GetDevice()->CreateCommittedResource(
 		&uploadHeapProperties_,
 		D3D12_HEAP_FLAG_NONE,
 		&vertexResourceDesc_,
@@ -144,10 +153,9 @@ void Triangle::GenerateMaterialResource() {
 	//どれだけのサイズが必要なのか考えよう
 }
 
+//描画
+void Triangle::Draw(Vector4 left, Vector4 top, Vector4 right, Transform transform, Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix, Vector4 color) {
 
-void Triangle::Draw(Vector4 left, Vector4 top, Vector4 right, Vector4 color) {
-	////VertexResourceを生成
-	//GenarateVertexResource();
 
 
 
@@ -171,16 +179,41 @@ void Triangle::Draw(Vector4 left, Vector4 top, Vector4 right, Vector4 color) {
 
 
 
+	//新しく引数作った方が良いかも
+	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	//遠視投影行列
+	//Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.5f, float() / float(WINDOW_SIZE_HEIGHT), 0.1f, 100.0f);
+	//Matrix4x4 worldMatrix = MakeAffineMatrix();
+
+	//WVP行列を作成
+	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+
+	//書き込む為のアドレスを取得
+	wvpResource_->Map(0, nullptr, reinterpret_cast<void**>(&wvpData_));
+
+
+
+	//さっき作ったworldMatrixの情報をここに入れる
+	*wvpData_ = worldViewProjectionMatrix;
+
+
+
+
 	//RootSignatureを設定。PSOに設定しているけど別途設定が必要
-	directXCommon_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
+	directXSetup_->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView_);
 	//形状を設定。PSOに設定しているものとはまた別。同じものを設定すると考えよう
-	directXCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	directXSetup_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	//マテリアルCBufferの場所を設定
 	//ここでの[0]はregisterの0ではないよ。rootParameter配列の0番目
-	directXCommon_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+	directXSetup_->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+	//CBVを設定する
+	//wvp用のCBufferの場所を指定
+	//今回はRootParameter[1]に対してCBVの設定を行っている
+	directXSetup_->GetCommandList()->SetGraphicsRootConstantBufferView(1, wvpResource_->GetGPUVirtualAddress());
+
 	//描画(DrawCall)３頂点で１つのインスタンス。
-	directXCommon_->GetCommandList()->DrawInstanced(3, 1, 0, 0);
+	directXSetup_->GetCommandList()->DrawInstanced(3, 1, 0, 0);
 
 
 }
@@ -190,6 +223,8 @@ void Triangle::Draw(Vector4 left, Vector4 top, Vector4 right, Vector4 color) {
 void Triangle::Release() {
 	vertexResouce_->Release();
 	materialResource->Release();
+	//Release忘れずに
+	wvpResource_->Release();
 }
 
 Triangle::~Triangle() {

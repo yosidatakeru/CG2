@@ -1,18 +1,37 @@
-#include"WinApp.h"
-WinApp::WinApp(const wchar_t* title, const int32_t WindowSizeWidth, const int32_t WindowSizeHeight) {
-	this->title_ = title;
-	this->kClientWidth_ = WindowSizeWidth;
-	this->kClientHeight_ = WindowSizeHeight;
-
-}
+#include "WinApp.h"
 
 
 
 
-void  WinApp::RegisterWindowsClass()
+
+
+//コンストラクタ
+WinApp::WinApp() 
 {
 
 
+}
+
+//
+LRESULT WinApp::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wparam, lparam)) {
+		return true;
+	}
+
+	switch (msg) {
+		//ウィンドウが破棄された
+	case WM_DESTROY:
+		//OSに対してアプリの終了を伝える
+		PostQuitMessage(0);
+		return 0;
+	}
+
+	return DefWindowProc(hwnd, msg, wparam, lparam);
+
+}
+
+//ウィンドウに情報を入れる
+void  WinApp::RegisterWindowsClass() {
 
 
 	//ウィンドウプロシャージャ
@@ -52,13 +71,21 @@ void  WinApp::RegisterWindowsClass()
 
 }
 
-
+//ウィンドウを表示
 void WinApp::DisplayWindow() {
 	//ウィンドウを表示
 	ShowWindow(hwnd_, SW_SHOW);
 }
 
-void WinApp::Initialize() {
+//初期化
+void WinApp::Initialize(const wchar_t* title, const int32_t WindowSizeWidth, const int32_t WindowSizeHeight) {
+	this->title_ = title;
+	this->kClientWidth_ = WindowSizeWidth;
+	this->kClientHeight_ = WindowSizeHeight;
+
+
+
+
 	//ウィンドウクラスを登録
 	RegisterWindowsClass();
 
@@ -70,7 +97,7 @@ void WinApp::Initialize() {
 
 
 
-
+//メッセージを送る
 void WinApp::WindowsMSG(MSG& msg) {
 	TranslateMessage(&msg);
 	DispatchMessage(&msg);
@@ -78,12 +105,9 @@ void WinApp::WindowsMSG(MSG& msg) {
 
 
 
+//ウィンドウを閉じる
 void WinApp::Close() {
 
 	CloseWindow(hwnd_);
 }
-
-
-
-
 

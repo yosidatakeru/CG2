@@ -1,10 +1,10 @@
 #pragma once
-#pragma once
-#include "MyFunction.h"
 #include "DirectXCommon.h"
 
-
-
+#include "Vector4.h"
+#include "Matrix4x4.h"
+#include "Matrix4x4Calculation.h"
+#include "Transform.h"
 
 class Triangle {
 public:
@@ -21,11 +21,14 @@ public:
 	//Material用のリソースを作る
 	void GenerateMaterialResource();
 
-	void Draw(Vector4 left, Vector4 top, Vector4 right, Vector4 color);
+	//TransformationMatrix用のResourceを作る
+	void GenerateTransformationMatrixResource();
+
+	void Draw(Vector4 left, Vector4 top, Vector4 right, Transform transform, Matrix4x4 viewMatrix, Matrix4x4 projectionMatrix, Vector4 color);
 
 
 	//Resource作成の関数化
-	ID3D12Resource* CreateBufferResource(size_t sizeInBytes);
+	ID3D12Resource* CreateBufferResource(ID3D12Device* device, size_t sizeInBytes);
 
 
 	void Release();
@@ -38,7 +41,7 @@ public:
 
 private:
 
-	DirectXCommon* directXCommon_ = nullptr;
+	DirectXCommon* directXSetup_ = nullptr;
 
 	HRESULT hr_;
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView_;
@@ -58,6 +61,9 @@ private:
 	Vector4* materialData_ = nullptr;
 
 
+	//TransformationMatrix用のResource
+	ID3D12Resource* wvpResource_ = nullptr;
+	Matrix4x4* wvpData_ = nullptr;
 
 
 };
